@@ -3,6 +3,7 @@
 // BST class
 
 #include <iostream>
+#include <iterator>
 
 #include "LinkedList.h"
 
@@ -36,7 +37,9 @@ struct Node {
 template <typename T>
 class BinarySearchTreeIterator {
 public:
-    BinarySearchTreeIterator() = default;
+    BinarySearchTreeIterator() = delete;
+
+    //TODO copy/move operator/constructor
 
     explicit BinarySearchTreeIterator(Node<T>* ptrRoot, Node<T>* ptrNode) {
         m_ptrNode = ptrNode;
@@ -54,12 +57,12 @@ public:
             m_ptrsStack.pushBack(curr);
             curr = curr->m_leftNode;
         }
-        m_ptrNode = m_ptrsStack.back();
+        m_ptrNode = !m_ptrsStack.empty() ? m_ptrsStack.back() : nullptr;
         return *this;
     }
 
     BinarySearchTreeIterator operator++(int) {
-        BinarySearchTreeIterator tmp(*this);
+        const BinarySearchTreeIterator tmp(*this);
         ++(*this);
         return tmp;
     }
@@ -70,11 +73,6 @@ public:
             i--;
         }
         return *this;
-    }
-
-    T& operator[](size_t index) {
-        (*this) + index;
-        return *m_ptrsStack.back()->m_data;
     }
 
     T& operator*() const { return *m_ptrNode->m_data; }
@@ -91,9 +89,9 @@ public:
 
 private:
     Node<T>* m_ptrNode;
-    forwardList<Node<T>*>
-        m_ptrsStack;  // was forward written by me, afer making
-    // it bidirectional, I used it as stack
+    LinkedList<Node<T>*>
+        m_ptrsStack;    //It was forward list written by me, after making
+                        // it bidirectional, I used it as "stack"
 };
 
 template <typename T>
@@ -107,7 +105,44 @@ public:
 public:
     BinarySearchTree() = default;
 
-    // Copy/Move constructors/operators and emplace
+    BinarySearchTree(const BinarySearchTree& other) {
+        simple::LinkedList<T> res;
+        save(other.m_rootNode, res);
+        for(auto &e:res)
+            insert(e);
+    }
+
+    BinarySearchTree(BinarySearchTree&& other) noexcept {
+        m_rootNode = other.m_rootNode;
+        m_numOfElements = other.m_numOfElements;
+        other.m_rootNode = nullptr;
+        other.m_numOfElements = 0;
+    }
+
+    BinarySearchTree(std::initializer_list<T> init){
+        for(auto &e:init)
+            insert(e);
+    }
+
+    BinarySearchTree &operator=(const BinarySearchTree& other){
+        if(this != &other && other.m_rootNode){
+            simple::LinkedList<T> res;
+            save(other.m_rootNode, res);
+            for(auto &e:res)
+                insert(e);
+        }
+        return *this;
+    }
+
+    BinarySearchTree &operator=(BinarySearchTree&& other) noexcept {
+        if(this != &other) {
+            m_rootNode = other.m_rootNode;
+            m_numOfElements = other.m_numOfElements;
+            other.m_rootNode = nullptr;
+            other.m_numOfElements = 0;
+        }
+        return *this;
+    }
 
     iterator insert(const T& data) {
         return insert(&m_rootNode, m_rootNode, data);
@@ -117,17 +152,26 @@ public:
         return insert(&m_rootNode, m_rootNode, std::move(data));
     }
 
-    void inorder() const { inorder(m_rootNode); }
+    template<typename... Args>
+    iterator emplace(Args &&... args){
+         return insert(T(std::forward<Args>(args)...));
+    }
 
     iterator remove(const T& data) { return remove(search(m_rootNode, data)); }
+
+    void clear() {
+        clear(m_rootNode);
+        m_numOfElements = 0;
+        m_rootNode = nullptr;
+    }
 
     iterator search(const T& data) const {
         return iterator(m_rootNode, search(m_rootNode, data));
     }
 
-    iterator getRoot() const { return iterator(m_rootNode, m_rootNode); }
+    iterator root() const { return iterator(m_rootNode, m_rootNode); }
 
-    size_t getSize() const { return m_numOfElements; }
+    [[nodiscard]] size_t size() const { return m_numOfElements; }
 
     iterator min() const { return iterator(m_rootNode, min(m_rootNode)); }
 
@@ -139,24 +183,47 @@ public:
         return *it;
     }
 
-    T& operator[](size_t index) {
-        auto it = min();
-        it + index;
-        return *it;
+    friend std::ofstream &operator<<(std::ofstream &os, const BinarySearchTree& source){
+        if(os.is_open() && source.m_rootNode){
+            simple::LinkedList<T> res;
+            source.save(source.m_rootNode, res);
+            for(auto &e:res)
+                os << e << "\n";
+        }
+        return os;
+    }
+
+    friend std::ifstream &operator>>(std::ifstream &is, BinarySearchTree& source){
+        if(is.is_open()){
+           std::istream_iterator<T> it(is);
+           std::istream_iterator<T> itEnd;
+
+           for(; it!=itEnd; it++){
+               source.insert(*it);
+           }
+        }
+        return is;
     }
 
     ~BinarySearchTree() {
-        if (m_rootNode) {
-            clear(m_rootNode);
-        }
+        clear();
     }
 
 public:
-    iterator begin() { return min(); }
+    iterator begin() const { return min(); }
 
-    iterator end() { return iterator(m_rootNode, nullptr); }
+    iterator end() const { return iterator(m_rootNode, nullptr); }
 
 private:
+    void save(m_Node* root, simple::LinkedList<T>& result) const{
+        auto tmp = root;
+        if(tmp) {
+            result.pushBack(*tmp->m_data);
+            save(tmp->m_leftNode, result);
+            save(tmp->m_rightNode, result);
+        }
+    }
+
     iterator remove(m_Node* root) {
         if (!root) return iterator(m_rootNode, nullptr);
 
@@ -169,6 +236,7 @@ private:
                 tmpParent->m_rightNode = nullptr;
 
             delete root;
+            m_numOfElements--;
             return iterator(m_rootNode, tmpParent);
         }
         // If one child is present
@@ -183,6 +251,7 @@ private:
                     tmpParent->m_rightNode = tmpChild;
             }
             delete root;
+            m_numOfElements--;
             return iterator(m_rootNode, tmpChild);
         } else if (!root->m_rightNode) {
             m_Node* tmpChild = root->m_leftNode;
@@ -195,6 +264,7 @@ private:
                     tmpParent->m_rightNode = tmpChild;
             }
             delete root;
+            m_numOfElements--;
             return iterator(m_rootNode, tmpChild);
         }
 
@@ -210,15 +280,8 @@ private:
 
             *root->m_data = *succ->m_data;
             delete succ;
+            m_numOfElements--;
             return iterator(m_rootNode, root);
-        }
-    }
-
-    void inorder(m_Node* root) const {
-        if (root) {
-            inorder(root->m_leftNode);
-            std::cout << *root->m_data << " ";
-            inorder(root->m_rightNode);
         }
     }
 
@@ -241,11 +304,14 @@ private:
     }
 
     m_Node* min(m_Node* root) const {
-        auto tmp = root;
-        while (tmp->m_leftNode) {
-            tmp = tmp->m_leftNode;
-        }
-        return tmp;
+        if(root) {
+            auto tmp = root;
+            while (tmp->m_leftNode) {
+                tmp = tmp->m_leftNode;
+            }
+            return tmp;
+        }else
+            return nullptr;
     }
 
     m_Node* max(m_Node* root) const {
@@ -257,11 +323,10 @@ private:
     }
 
     void clear(m_Node* root) {
-        auto tmp = root;
-        if (tmp) {
-            clear(tmp->m_leftNode);
-            clear(tmp->m_rightNode);
-            delete tmp;
+        if (root) {
+            clear(root->m_leftNode);
+            clear(root->m_rightNode);
+            delete root;
         }
     }
 

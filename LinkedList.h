@@ -10,41 +10,45 @@ struct list_Node {
     list_Node() = default;
 
     list_Node(const T &value, list_Node *ptrPrev, list_Node *ptrNext) {
-        m_data = value;
+        m_data = new T(value);
         m_nextNode = ptrNext;
         m_prevNode = ptrPrev;
     }
 
     list_Node(T &&value, list_Node *ptrPrev, list_Node *ptrNext) {
-        m_data = std::move(value);
+        m_data = new T(std::move(value));
         m_nextNode = ptrNext;
         m_prevNode = ptrPrev;
     }
 
-    T m_data;
+    ~list_Node(){
+        delete m_data;
+    }
+
+    T *m_data;
     list_Node *m_nextNode{};
     list_Node *m_prevNode{};
 };
 
 template <typename T>
-class forwardListIterator {
+class LinkedListIterator {
 public:
-    forwardListIterator() : m_Node() {}
+    LinkedListIterator() : m_Node() {}
 
-    explicit forwardListIterator(list_Node<T> *ptr) : m_Node(ptr){};
+    explicit LinkedListIterator(list_Node<T> *ptr) : m_Node(ptr){};
 
-    forwardListIterator &operator++() {
+    LinkedListIterator &operator++() {
         m_Node = m_Node->m_nextNode;
         return *this;
     }
 
-    forwardListIterator operator++(int) {
-        forwardListIterator tmp(*this);
+    LinkedListIterator operator++(int) {
+        LinkedListIterator tmp(*this);
         ++(*this);
         return tmp;
     }
 
-    forwardListIterator &operator+(int i) {
+    LinkedListIterator &operator+(int i) {
         while (i) {
             (*this)++;
             i--;
@@ -65,11 +69,11 @@ public:
 
     T &operator*() const { return *m_Node->m_data; }
 
-    bool operator==(const forwardListIterator &other) const {
+    bool operator==(const LinkedListIterator &other) const {
         return m_Node == other.m_Node;
     }
 
-    bool operator!=(const forwardListIterator &other) const {
+    bool operator!=(const LinkedListIterator &other) const {
         return this->m_Node != other.m_Node;
     }
 
@@ -78,23 +82,23 @@ private:
 };
 
 template <typename T>
-class forwardList {
+class LinkedList {
 private:
     typedef list_Node<T> m_Node;
 
 public:
-    typedef forwardListIterator<T> iterator;
+    typedef LinkedListIterator<T> iterator;
 
 public:
-    forwardList() = default;
+    LinkedList() = default;
 
-    forwardList(const forwardList<T> &other) {
+    LinkedList(const LinkedList<T> &other) {
         for (size_t i = 0; i < other.size(); i++) {
             this->emplaceBack(other[i]);
         }
     }
 
-    forwardList(forwardList<T> &&other) noexcept {
+    LinkedList(LinkedList<T> &&other) noexcept {
         this->m_head = other.m_head;
         this->m_tail = other.m_tail;
         this->m_size = other.m_size;
@@ -102,7 +106,7 @@ public:
         other.m_tail = nullptr;
     }
 
-    ~forwardList() {
+    ~LinkedList() {
         while (m_head) {
             auto tmp = m_head;
             m_head = m_head->m_nextNode;
@@ -110,7 +114,7 @@ public:
         }
     }
 
-    forwardList<T> &operator=(forwardList<T> &&other) {
+    LinkedList<T> &operator=(LinkedList<T> &&other) {
         this->m_head = other.m_head;
         this->m_tail = other.m_tail;
         this->m_size = other.m_size;
@@ -118,7 +122,7 @@ public:
         other.m_tail = nullptr;
     }
 
-    forwardList<T> &operator=(const forwardList<T> &other) {
+    LinkedList<T> &operator=(const LinkedList<T> &other) {
         for (size_t i = 0; i < other.size(); i++) {
             this->emplaceBack(other[i]);
         }
@@ -163,7 +167,7 @@ public:
             m_tail = newElement;
         }
         m_size++;
-        return newElement->m_data;
+        return *newElement->m_data;
     }
 
     void pushFront(const T &element) {
@@ -236,18 +240,16 @@ public:
             tmp = tmp->m_nextNode;
             index--;
         }
-        return tmp->m_data;
+        return *tmp->m_data;
     }
 
     size_t size() const { return m_size; }
 
     bool empty() const { return m_size == 0; }
 
-    const T &back() const { return m_tail->m_data; }
+    const T &back() const { return *m_tail->m_data; }
 
-    T &back() { return m_tail->m_data; }
-
-    void sort() {}  // TODO implement sorting
+    T &back() { return *m_tail->m_data; }
 
     T *find(const T &val) {
         auto tmp = m_head;
