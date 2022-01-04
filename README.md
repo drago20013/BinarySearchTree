@@ -1,5 +1,5 @@
 # BinarySearchTree
-###### University project, implementation of Binary Search Tree data structure. Without usage of STL containers.
+###### University project, implementation of Binary Search Tree data structure without usage of STL containers.
 ![CPP](https://img.shields.io/badge/C++-Solutions-blue.svg?style=flat&logo=c%2B%2B)
 ![Linux](https://img.shields.io/badge/os-linux-brightgreen)
 ![Mac](https://img.shields.io/badge/os-mac-brightgreen)
