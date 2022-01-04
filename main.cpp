@@ -58,11 +58,12 @@ struct Vector3 {
     }
 
     bool operator<(const Vector3 &other) const { return x < other.x; }
+    bool operator<=(const Vector3 &other) const { return x <= other.x; }
     bool operator==(const Vector3 &other) const { return x == other.x; }
 };
 
 template<typename T>
-void printTree(const simple::BinarySearchTree<T> &tree) {
+void printTree(simple::BinarySearchTree<T> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
     for (auto & e:tree)
         std::cout << e << " ";
@@ -71,16 +72,16 @@ void printTree(const simple::BinarySearchTree<T> &tree) {
 }
 
 template<>
-void printTree(const simple::BinarySearchTree<Vector3> &tree) {
+void printTree(simple::BinarySearchTree<Vector3> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
-    for (auto & e:tree)
+    for  (auto & e:tree)
         std::cout << e << "\n";
 
     std::cout << "-------------------------------------" << std::endl;
 }
 
 template<>
-void printTree(const simple::BinarySearchTree<std::pair<int *, std::string>> &tree) {
+void printTree(simple::BinarySearchTree<std::pair<int *, std::string>> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
     for (auto & e:tree)
         std::cout << *e.first << ", " << e.second << " \n";
@@ -92,7 +93,7 @@ int main() {
     simple::BinarySearchTree<int> iBST;
 
     iBST.insert(10);
-    auto it = iBST.insert(7);
+    iBST.insert(7);
     iBST.insert(15);
     iBST.insert(17);
     iBST.insert(5);
@@ -100,11 +101,14 @@ int main() {
     iBST.insert(12);
     iBST.insert(20);
     iBST.insert(13);
-    // auto it = iBST.begin();
-    std::cout << *iBST.root() << std::endl;
+    auto it = iBST.begin();
+    simple::BinarySearchTreeIterator<int> it7;
+
+    std::cout << *it << " " << *++it << " " << *++it <<  std::endl;
+
+    std::cout << iBST.root() << std::endl;
     std::cout << *iBST.search(7) << std::endl;
     printTree(iBST);
-    std::cout << iBST[1] << std::endl;
     std::cout << *it << " next -> " << *(++it) << ", next using it++ "
               << "*it: " << *it << ", and it++: " << *(it++)
               << ", and it after " << *it << ", it+2:" << *(it + 2)
@@ -116,7 +120,7 @@ int main() {
     printTree(iBST);
     iBST.search(123);
     std::cout << std::endl;
-    std::cout << *iBST.root() << std::endl;
+    std::cout << iBST.root() << std::endl;
 
     iBST.remove(5);
     printTree(iBST);
@@ -135,14 +139,13 @@ int main() {
     sBST.insert("asdxcv");
     sBST.insert("ergv");
 
-    std::cout << *sBST.root() << std::endl;
+    std::cout << sBST.root() << std::endl;
     std::cout << *sBST.search("sdf") << std::endl;
-    std::cout << *sBST.min() << " " << *iBST.min() << " " << *iBST.max()
+    std::cout << sBST.min() << " " << iBST.min() << " " << iBST.max()
               << std::endl;
     printTree(sBST);
     std::cout << std::endl;
     auto it2 = sBST.begin();
-    std::cout << sBST[3] << std::endl;
     std::cout << *it2 << std::endl;
     std::cout << "++it2: " << *++it2 << ", ++it2: " << *++it2
               << ", it2+2: " << *(it2 + 2) << std::endl;
