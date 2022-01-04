@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 #include "BST.h"
 
@@ -104,7 +105,7 @@ int main() {
     auto it = iBST.begin();
     simple::BinarySearchTreeIterator<int> it7;
 
-    std::cout << *it << " " << *++it << " " << *++it <<  std::endl;
+    std::cout << *it << " " << *++it << " " << *++it << std::endl;
 
     std::cout << iBST.root() << std::endl;
     std::cout << *iBST.search(7) << std::endl;
@@ -180,8 +181,8 @@ int main() {
     sBST.insert("Very nice");
     printTree(sBST);
 
-    simple::BinarySearchTree<std::pair<int*, std::string>> test;
-    int a {3}, b{7};
+    simple::BinarySearchTree<std::pair<int *, std::string>> test;
+    int a{3}, b{7};
     test.insert(std::pair(&a, "sedsf"));
     test.emplace(&b, "asdwaqeq");
     printTree(test);
@@ -189,7 +190,8 @@ int main() {
     simple::BinarySearchTree<int> asd{12, 43, 65, 73, 10, 23, 6, -1};
     simple::BinarySearchTree<int> ewq = {65, 73, 123, 54, 10, 23, 6, -1};
 
-    simple::BinarySearchTree<std::pair<int*, std::string>> test2{{&b, "nbmjkh"}, {&a, "zxcvnbydf"}};
+    simple::BinarySearchTree<std::pair<int *, std::string>> test2{{&b, "nbmjkh"},
+                                                                  {&a, "zxcvnbydf"}};
     printTree(test2);
     printTree(asd);
     printTree(ewq);
@@ -212,4 +214,9 @@ int main() {
     simple::BinarySearchTree<Vector3> round2(treeOfVec3);
 
     printTree(round2);
+    //reverse iterator
+    auto rit = final.rbegin();
+    for (; rit != final.rend(); rit++) {
+        std::cout << *rit << " ";
+    }
 }
