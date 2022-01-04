@@ -1,6 +1,4 @@
 #include <iostream>
-#include <fstream>
-#include <algorithm>
 
 #include "BST.h"
 
@@ -22,7 +20,7 @@ struct Vector3 {
         for (int i = 0; i < 5; i++) ar[i] = other.ar[i];
     }
 
-    Vector3(Vector3 &&other)  noexcept : x(other.x), y(other.y), z(other.z) {
+    Vector3(Vector3 &&other) noexcept : x(other.x), y(other.y), z(other.z) {
         ar = other.ar;
         other.ar = nullptr;
     }
@@ -30,7 +28,7 @@ struct Vector3 {
     ~Vector3() { delete[] ar; }
 
     Vector3 &operator=(const Vector3 &other) {
-        if(this != &other) {
+        if (this != &other) {
             std::cout << "Copy\n";
             x = other.x;
             y = other.y;
@@ -41,7 +39,7 @@ struct Vector3 {
         return *this;
     }
 
-    Vector3 &operator=(Vector3 &&other)  noexcept {
+    Vector3 &operator=(Vector3 &&other) noexcept {
         if (this != &other) {
             std::cout << "Move\n";
             x = other.x;
@@ -66,7 +64,7 @@ struct Vector3 {
 template<typename T>
 void printTree(simple::BinarySearchTree<T> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
-    for (auto & e:tree)
+    for (auto &e: tree)
         std::cout << e << " ";
 
     std::cout << "\n-------------------------------------" << std::endl;
@@ -75,7 +73,7 @@ void printTree(simple::BinarySearchTree<T> &tree) {
 template<>
 void printTree(simple::BinarySearchTree<Vector3> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
-    for  (auto & e:tree)
+    for (auto &e: tree)
         std::cout << e << "\n";
 
     std::cout << "-------------------------------------" << std::endl;
@@ -84,8 +82,8 @@ void printTree(simple::BinarySearchTree<Vector3> &tree) {
 template<>
 void printTree(simple::BinarySearchTree<std::pair<int *, std::string>> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
-    for (auto & e:tree)
-        std::cout << *e.first << ", " << e.second << " \n";
+    for (auto &[x, y]: tree)
+        std::cout << *x << ", " << y << " \n";
 
     std::cout << "-------------------------------------" << std::endl;
 }
@@ -154,14 +152,14 @@ int main() {
     simple::BinarySearchTree<Vector3> treeOfVec3;
     Vector3 yes(1);
     yes.ar[0] = 1;
-    treeOfVec3.insert(std::move(yes));
+    treeOfVec3.insert(yes);
     treeOfVec3.insert({2.4f, 1.6f, 0.9f});
     treeOfVec3.insert(Vector3(1.6f));
     printTree(treeOfVec3);
 
     printTree(sBST);
     printTree(iBST);
-//    auto copy = sBST;
+    //    auto copy = sBST;
     auto moved = std::move(iBST);
 
 
@@ -200,23 +198,43 @@ int main() {
     oFile << ewq;
     oFile.close();
 
-    std::ifstream inFile("out.txt");
+    std::ifstream inFile("in.txt");
     simple::BinarySearchTree<int> final;
     inFile >> final;
     inFile.close();
-
     printTree(final);
 
     auto bs = sBST;
 
     printTree(bs);
 
+    bs << "sdf"
+       << "12wzxc"
+       << "dfg4";
+
+    printTree(bs);
+
     simple::BinarySearchTree<Vector3> round2(treeOfVec3);
 
     printTree(round2);
+
     //reverse iterator
     auto rit = final.rbegin();
     for (; rit != final.rend(); rit++) {
         std::cout << *rit << " ";
+    }
+    std::cout << std::endl;
+
+    moved.serialize("data.dat");
+
+    simple::BinarySearchTree<int> fromBin;
+    fromBin.deserialize("data.dat");
+
+    printTree(fromBin);
+    simple::BinarySearchTree<int> iTree{12, 35, 20, 68};
+    simple::BinarySearchTree<char> cTres{'b', 's', 't'};
+
+    for(const auto &e:iTree){
+        std::cout << e << "\n";
     }
 }
