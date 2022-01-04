@@ -113,6 +113,85 @@ private:
                             // it bidirectional, I used it as "stack"
 };
 
+    template <typename T>
+    class BinarySearchTreeReverseIterator {
+    public:
+        BinarySearchTreeReverseIterator() = default;
+
+        explicit BinarySearchTreeReverseIterator(Node<T>* ptrRoot) {
+            Node<T>* curr = ptrRoot;
+            while (curr) {
+                m_ptrsStack.pushBack(curr);
+                curr = curr->m_rightNode;
+            }
+        }
+
+        BinarySearchTreeReverseIterator(const BinarySearchTreeReverseIterator &other){
+            m_ptrsStack = other.m_ptrsStack;
+        }
+
+        BinarySearchTreeReverseIterator(BinarySearchTreeReverseIterator &&other) noexcept {
+            m_ptrsStack.clear();
+            m_ptrsStack = std::move(other.m_ptrsStack);
+        }
+
+        BinarySearchTreeReverseIterator &operator=(BinarySearchTreeReverseIterator&& other) noexcept {
+            if(this != &other){
+                m_ptrsStack.clear();
+                m_ptrsStack = std::move(other.m_ptrsStack);
+            }
+            return *this;
+        }
+
+        BinarySearchTreeReverseIterator &operator=(const BinarySearchTreeReverseIterator& other) {
+            if(this != &other){
+                m_ptrsStack = other.m_ptrsStack;
+            }
+            return *this;
+        }
+
+        BinarySearchTreeReverseIterator& operator++() {
+            Node<T>* curr = m_ptrsStack.back()->m_leftNode;
+            m_ptrsStack.popBack();
+            while (curr) {
+                m_ptrsStack.pushBack(curr);
+                curr = curr->m_rightNode;
+            }
+            return *this;
+        }
+
+        BinarySearchTreeReverseIterator operator++(int) {
+            const BinarySearchTreeReverseIterator tmp(*this);
+            ++(*this);
+            return tmp;
+        }
+
+        BinarySearchTreeReverseIterator& operator+(size_t i) {
+            while (i) {
+                (*this)++;
+                i--;
+            }
+            return *this;
+        }
+
+        const T& operator*() const { return *m_ptrsStack.back()->m_data; }
+
+        const T* operator->() const { return m_ptrsStack.back()->m_data; }
+
+        bool operator==(const BinarySearchTreeReverseIterator& other) const {
+            return m_ptrsStack.ptrBack() == other.m_ptrsStack.ptrBack();
+        }
+
+        bool operator!=(const BinarySearchTreeReverseIterator& other) const {
+            return m_ptrsStack.ptrBack() != other.m_ptrsStack.ptrBack();
+        }
+
+    private:
+        LinkedList<Node<T>*>
+                m_ptrsStack;    //It was forward list written by me, after making
+        // it bidirectional, I used it as "stack"
+    };
+
 template <typename T>
 class BinarySearchTree {
 private:
@@ -120,6 +199,7 @@ private:
 
 public:
     typedef BinarySearchTreeIterator<T> iterator;
+    typedef BinarySearchTreeReverseIterator<T> reverse_iterator;
 
 public:
     BinarySearchTree() = default;
@@ -142,6 +222,8 @@ public:
         for(auto &e:init)
             insert(e);
     }
+
+    std::vector<int> a;
 
     BinarySearchTree &operator=(const BinarySearchTree& other){
         if(this != &other && other.m_rootNode){
@@ -227,6 +309,10 @@ public:
     iterator begin() { return iterator(m_rootNode); }
 
     iterator end() { return iterator(nullptr); }
+
+    reverse_iterator rbegin() { return reverse_iterator(m_rootNode); }
+
+    reverse_iterator rend() { return reverse_iterator(nullptr); }
 
 private:
     void save(m_Node* root, simple::LinkedList<T>& result) const{
