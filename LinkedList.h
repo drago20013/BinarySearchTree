@@ -37,11 +37,12 @@ public:
 
     explicit LinkedListIterator(list_Node<T> *ptr) : m_Node(ptr){};
 
+    //++it
     LinkedListIterator &operator++() {
         m_Node = m_Node->m_nextNode;
         return *this;
     }
-
+    //it++
     LinkedListIterator operator++(int) {
         LinkedListIterator tmp(*this);
         ++(*this);
