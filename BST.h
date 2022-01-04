@@ -37,12 +37,9 @@ struct Node {
 template <typename T>
 class BinarySearchTreeIterator {
 public:
-    BinarySearchTreeIterator() = delete;
+    BinarySearchTreeIterator() = default;
 
-    //TODO copy/move operator/constructor
-
-    explicit BinarySearchTreeIterator(Node<T>* ptrRoot, Node<T>* ptrNode) {
-        m_ptrNode = ptrNode;
+    explicit BinarySearchTreeIterator(Node<T>* ptrRoot) {
         Node<T>* curr = ptrRoot;
         while (curr) {
             m_ptrsStack.pushBack(curr);
@@ -50,14 +47,37 @@ public:
         }
     }
 
+    BinarySearchTreeIterator(const BinarySearchTreeIterator &other){
+        m_ptrsStack = other.m_ptrsStack;
+    }
+
+    BinarySearchTreeIterator(BinarySearchTreeIterator &&other) noexcept {
+        m_ptrsStack.clear();
+        m_ptrsStack = std::move(other.m_ptrsStack);
+    }
+
+    BinarySearchTreeIterator &operator=(BinarySearchTreeIterator&& other) noexcept {
+       if(this != &other){
+           m_ptrsStack.clear();
+           m_ptrsStack = std::move(other.m_ptrsStack);
+       }
+       return *this;
+    }
+
+    BinarySearchTreeIterator &operator=(const BinarySearchTreeIterator& other) {
+        if(this != &other){
+            m_ptrsStack = other.m_ptrsStack;
+        }
+        return *this;
+    }
+
     BinarySearchTreeIterator& operator++() {
         Node<T>* curr = m_ptrsStack.back()->m_rightNode;
-        m_ptrsStack.popBack();
+            m_ptrsStack.popBack();
         while (curr) {
             m_ptrsStack.pushBack(curr);
             curr = curr->m_leftNode;
         }
-        m_ptrNode = !m_ptrsStack.empty() ? m_ptrsStack.back() : nullptr;
         return *this;
     }
 
@@ -75,23 +95,22 @@ public:
         return *this;
     }
 
-    T& operator*() const { return *m_ptrNode->m_data; }
+    const T& operator*() const { return *m_ptrsStack.back()->m_data; }
 
-    T* operator->() const { return m_ptrNode->m_data; }
+    const T* operator->() const { return m_ptrsStack.back()->m_data; }
 
     bool operator==(const BinarySearchTreeIterator& other) const {
-        return m_ptrNode == other.m_ptrNode;
+        return m_ptrsStack.ptrBack() == other.m_ptrsStack.ptrBack();
     }
 
     bool operator!=(const BinarySearchTreeIterator& other) const {
-        return m_ptrNode != other.m_ptrNode;
+        return m_ptrsStack.ptrBack() != other.m_ptrsStack.ptrBack();
     }
 
 private:
-    Node<T>* m_ptrNode;
     LinkedList<Node<T>*>
-        m_ptrsStack;    //It was forward list written by me, after making
-                        // it bidirectional, I used it as "stack"
+            m_ptrsStack;    //It was forward list written by me, after making
+                            // it bidirectional, I used it as "stack"
 };
 
 template <typename T>
@@ -144,20 +163,20 @@ public:
         return *this;
     }
 
-    iterator insert(const T& data) {
-        return insert(&m_rootNode, m_rootNode, data);
+    const T& insert(const T& data) {
+        return *(insert(&m_rootNode, m_rootNode, data)->m_data);
     }
 
-    iterator insert(T&& data) {
-        return insert(&m_rootNode, m_rootNode, std::move(data));
+    const T& insert(T&& data) {
+        return *(insert(&m_rootNode, m_rootNode, std::move(data))->m_data);
     }
 
     template<typename... Args>
-    iterator emplace(Args &&... args){
+    const T& emplace(Args &&... args){
          return insert(T(std::forward<Args>(args)...));
     }
 
-    iterator remove(const T& data) { return remove(search(m_rootNode, data)); }
+    void remove(const T& data) { remove(search(m_rootNode, data)); }
 
     void clear() {
         clear(m_rootNode);
@@ -165,23 +184,18 @@ public:
         m_rootNode = nullptr;
     }
 
-    iterator search(const T& data) const {
-        return iterator(m_rootNode, search(m_rootNode, data));
+    const T* search(const T& data) const {
+        auto tmp = search(m_rootNode, data);
+        return tmp? tmp->m_data : nullptr;
     }
 
-    iterator root() const { return iterator(m_rootNode, m_rootNode); }
+    const T& root() const {  return *m_rootNode->m_data; }
 
     [[nodiscard]] size_t size() const { return m_numOfElements; }
 
-    iterator min() const { return iterator(m_rootNode, min(m_rootNode)); }
+    const T& min() const { return *(min(m_rootNode)->m_data); }
 
-    iterator max() const { return iterator(m_rootNode, max(m_rootNode)); }
-
-    const T& operator[](size_t index) const {
-        auto it = min();
-        it + index;
-        return *it;
-    }
+    const T& max() const { return *(max(m_rootNode)->m_data); }
 
     friend std::ofstream &operator<<(std::ofstream &os, const BinarySearchTree& source){
         if(os.is_open() && source.m_rootNode){
@@ -210,9 +224,9 @@ public:
     }
 
 public:
-    iterator begin() const { return min(); }
+    iterator begin() { return iterator(m_rootNode); }
 
-    iterator end() const { return iterator(m_rootNode, nullptr); }
+    iterator end() { return iterator(nullptr); }
 
 private:
     void save(m_Node* root, simple::LinkedList<T>& result) const{
@@ -224,68 +238,63 @@ private:
         }
     }
 
-    iterator remove(m_Node* root) {
-        if (!root) return iterator(m_rootNode, nullptr);
-
+    void remove(m_Node* node) {
+        if(!node) return;
         // If no child is present
-        if (!root->m_leftNode && !root->m_rightNode) {
-            auto tmpParent = root->m_parent;
-            if (root == tmpParent->m_leftNode)
+        if (!node->m_leftNode && !node->m_rightNode) {
+            auto tmpParent = node->m_parent;
+            if (node == tmpParent->m_leftNode)
                 tmpParent->m_leftNode = nullptr;
             else
                 tmpParent->m_rightNode = nullptr;
 
-            delete root;
+            delete node;
             m_numOfElements--;
-            return iterator(m_rootNode, tmpParent);
         }
         // If one child is present
-        else if (!root->m_leftNode) {
-            m_Node* tmpChild = root->m_rightNode;
-            m_Node* tmpParent = root->m_parent;
+        else if (!node->m_leftNode) {
+            m_Node* tmpChild = node->m_rightNode;
+            m_Node* tmpParent = node->m_parent;
             tmpChild->m_parent = tmpParent;
             if (tmpParent) {
-                if (root == tmpParent->m_leftNode)
+                if (node == tmpParent->m_leftNode)
                     tmpParent->m_leftNode = tmpChild;
                 else
                     tmpParent->m_rightNode = tmpChild;
             }
-            delete root;
+            delete node;
             m_numOfElements--;
-            return iterator(m_rootNode, tmpChild);
-        } else if (!root->m_rightNode) {
-            m_Node* tmpChild = root->m_leftNode;
-            m_Node* tmpParent = root->m_parent;
+        } else if (!node->m_rightNode) {
+            m_Node* tmpChild = node->m_leftNode;
+            m_Node* tmpParent = node->m_parent;
             tmpChild->m_parent = tmpParent;
             if (tmpParent) {
-                if (root == tmpParent->m_leftNode)
+                if (node == tmpParent->m_leftNode)
                     tmpParent->m_leftNode = tmpChild;
                 else
                     tmpParent->m_rightNode = tmpChild;
             }
-            delete root;
+            delete node;
             m_numOfElements--;
-            return iterator(m_rootNode, tmpChild);
         }
 
         // If both children are present
         else {
-            auto succ = successor(root);
+            auto succ = successor(node);
             auto successorsParent = succ->m_parent;
 
-            if (successorsParent != root)
+            if (successorsParent != node)
                 successorsParent->m_leftNode = succ->m_rightNode;
             else
                 successorsParent->m_rightNode = succ->m_rightNode;
 
-            *root->m_data = *succ->m_data;
+            *node->m_data = *succ->m_data;
             delete succ;
             m_numOfElements--;
-            return iterator(m_rootNode, root);
         }
     }
 
-    m_Node* predecessor(m_Node* root) {
+    const m_Node* predecessor(m_Node* root) const {
         if (root->m_leftNode) return max(root->m_leftNode);
         auto tmpParent = root->m_parent;
         while (tmpParent && root == tmpParent->m_leftNode) {
@@ -294,7 +303,7 @@ private:
         return tmpParent;
     }
 
-    m_Node* successor(m_Node* root) {
+    const m_Node* successor(m_Node* root) const {
         if (root->m_rightNode) return min(root->m_rightNode);
         auto tmpParent = root->m_parent;
         while (tmpParent && root == tmpParent->m_rightNode) {
@@ -303,7 +312,7 @@ private:
         return tmpParent;
     }
 
-    m_Node* min(m_Node* root) const {
+    const m_Node* min(m_Node* root) const {
         if(root) {
             auto tmp = root;
             while (tmp->m_leftNode) {
@@ -314,7 +323,7 @@ private:
             return nullptr;
     }
 
-    m_Node* max(m_Node* root) const {
+    const m_Node* max(m_Node* root) const {
         auto tmp = root;
         while (tmp->m_rightNode) {
             tmp = tmp->m_rightNode;
@@ -330,17 +339,17 @@ private:
         }
     }
 
-    iterator insert(m_Node** rootPtr, m_Node* parentPtr, const T& data) {
+    const m_Node * insert(m_Node** rootPtr, m_Node* parentPtr, const T& data) {
         auto root = *rootPtr;
         if (!root) {
             *rootPtr = new m_Node(data, parentPtr, nullptr, nullptr);
             m_numOfElements++;
-            return iterator(m_rootNode, *rootPtr);
+            return *rootPtr;
         }
 
         if (data == *root->m_data) {
             // do nothing and return pointer to element
-            return iterator(m_rootNode, root);
+            return root;
         }
 
         if (data < *root->m_data) {
@@ -350,17 +359,17 @@ private:
         }
     }
 
-    iterator insert(m_Node** rootPtr, m_Node* parentPtr, T&& data) {
+    const m_Node* insert(m_Node** rootPtr, m_Node* parentPtr, T&& data) {
         auto root = *rootPtr;
         if (!root) {
             *rootPtr = new m_Node(std::move(data), parentPtr, nullptr, nullptr);
             m_numOfElements++;
-            return iterator(m_rootNode, *rootPtr);
+            return *rootPtr;
         }
 
         if (data == *root->m_data) {
             // do nothing and return pointer to element
-            return iterator(m_rootNode, root);
+            return root;
         }
 
         if (data < *root->m_data) {
