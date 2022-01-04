@@ -104,6 +104,7 @@ public:
         this->m_size = other.m_size;
         other.m_head = nullptr;
         other.m_tail = nullptr;
+        other.m_size = 0;
     }
 
     ~LinkedList() {
@@ -115,17 +116,24 @@ public:
     }
 
     LinkedList<T> &operator=(LinkedList<T> &&other) {
-        this->m_head = other.m_head;
-        this->m_tail = other.m_tail;
-        this->m_size = other.m_size;
-        other.m_head = nullptr;
-        other.m_tail = nullptr;
+        if(this != &other) {
+            this->m_head = other.m_head;
+            this->m_tail = other.m_tail;
+            this->m_size = other.m_size;
+            other.m_head = nullptr;
+            other.m_tail = nullptr;
+            other.m_size = 0;
+        }
+        return *this;
     }
 
     LinkedList<T> &operator=(const LinkedList<T> &other) {
-        for (size_t i = 0; i < other.size(); i++) {
-            this->emplaceBack(other[i]);
+        if(this != &other) {
+            for (size_t i = 0; i < other.size(); i++) {
+                this->emplaceBack(other[i]);
+            }
         }
+        return *this;
     }
 
     void pushBack(const T &element) {
@@ -248,6 +256,10 @@ public:
     bool empty() const { return m_size == 0; }
 
     const T &back() const { return *m_tail->m_data; }
+
+    const list_Node<T>* ptrBack() const {return m_tail;}
+
+    list_Node<T>* ptrBack() {return m_tail;}
 
     T &back() { return *m_tail->m_data; }
 
