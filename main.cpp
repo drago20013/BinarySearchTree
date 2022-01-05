@@ -234,7 +234,7 @@ int main() {
     simple::BinarySearchTree<int> iTree{12, 35, 20, 68};
     simple::BinarySearchTree<char> cTres{'b', 's', 't'};
 
-    for(const auto &e:iTree){
+    for (const auto &e: iTree) {
         std::cout << e << "\n";
     }
 }
