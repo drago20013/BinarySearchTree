@@ -351,7 +351,7 @@ namespace simple {
                 tmp = tmp->m_nextNode;
                 index--;
             }
-            return tmp->m_data;
+            return *tmp->m_data;
         }
 
         //! [] operator returns reference to element a given index. Const version.
