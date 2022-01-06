@@ -119,7 +119,7 @@ namespace simple {
             return *this;
         }
 
-        //! Preincrementation operator.
+        //! Pre-incrementation operator.
 
         //! Increment iterator to next place.
         //! @return New iterator.
@@ -133,7 +133,7 @@ namespace simple {
             return *this;
         }
 
-        //! Postincrementation operator.
+        //! Post-incrementation operator.
 
         //! Increment iterator to next place.
         //! @return Old iterator.
@@ -244,7 +244,7 @@ namespace simple {
             return *this;
         }
 
-        //! Preincrementation operator.
+        //! Pre-incrementation operator.
 
         //! Increment iterator to next place.
         //! @return New iterator.
@@ -258,7 +258,7 @@ namespace simple {
             return *this;
         }
 
-        //! Postincrementation operator.
+        //! Post-incrementation operator.
 
         //! Increment iterator to next place.
         //! @return Old iterator.
@@ -360,6 +360,7 @@ namespace simple {
         //! Copy operator.
 
         //! @param other Binary search tree to copy.
+        //! @return Binary search tree.
         BinarySearchTree &operator=(const BinarySearchTree &other) {
             if (this != &other && other.m_rootNode) {
                 LinkedList<T> res;
@@ -373,6 +374,7 @@ namespace simple {
         //! Move operator.
 
         //! @param other Binary search tree to move.
+        //! @return Binary search tree.
         BinarySearchTree &operator=(BinarySearchTree &&other) noexcept {
             if (this != &other) {
                 m_rootNode = other.m_rootNode;
@@ -533,15 +535,23 @@ namespace simple {
 
     public:
         //! Iterator to min element.
+
+        //! @return begin iterator.
         iterator begin() { return iterator(m_rootNode); }
 
         //! Iterator to end. (nullptr)
+
+        //! @return end iterator.
         iterator end() { return iterator(nullptr); }
 
         //! Reverse iterator to max element.
+
+        //! @return rbegin() iterator.
         reverse_iterator rbegin() { return reverse_iterator(m_rootNode); }
 
         //! Reverse iterator to end. (nullptr)
+
+        //! @return rend iterator.
         reverse_iterator rend() { return reverse_iterator(nullptr); }
 
     private:
@@ -564,7 +574,7 @@ namespace simple {
 
         //! If node exist deletes it.
         //! @param node Node to delete
-        void remove(m_Node *node) {
+        void remove(const m_Node *node) {
             if (!node) return;
             // If no child is present
             if (!node->m_leftNode && !node->m_rightNode) {
@@ -625,7 +635,7 @@ namespace simple {
         //! Returns predecessor of given node.
         //! @param root Local root node.
         //! @return Pointer to predecessor.
-        const m_Node *predecessor(m_Node *root) const {
+        const m_Node *predecessor(const m_Node *root) const {
             if (root->m_leftNode) return max(root->m_leftNode);
             auto tmpParent = root->m_parent;
             while (tmpParent && root == tmpParent->m_leftNode) {
@@ -639,7 +649,7 @@ namespace simple {
         //! Returns successor of given node.
         //! @param root Local root node.
         //! @return Pointer to successor.
-        const m_Node *successor(m_Node *root) const {
+        const m_Node *successor(const m_Node *root) const {
             if (root->m_rightNode) return min(root->m_rightNode);
             auto tmpParent = root->m_parent;
             while (tmpParent && root == tmpParent->m_rightNode) {
