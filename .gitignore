@@ -1,3 +1,6 @@
+dconfig
+html/
+latex/
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
