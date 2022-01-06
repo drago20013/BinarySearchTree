@@ -1,7 +1,18 @@
+/**
+ * @file main.cpp
+ * @author Michal Smaluch (https://github.com/drago20013)
+ * @brief Main file with testing of binary search tree data structure.
+ * @version 1.2
+ * @date 2022-01-05
+ *
+ * @copyright GNU Public License v3.0
+ */
+
 #include <iostream>
 
 #include "BST.h"
 
+//! Helper struct used for testing
 struct Vector3 {
     float x{}, y{}, z{};
     int *ar;
@@ -61,6 +72,8 @@ struct Vector3 {
     bool operator==(const Vector3 &other) const { return x == other.x; }
 };
 
+//! Template function used for prining tree.
+//! It uses forward iterator and print data in order.
 template<typename T>
 void printTree(simple::BinarySearchTree<T> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
@@ -70,6 +83,7 @@ void printTree(simple::BinarySearchTree<T> &tree) {
     std::cout << "\n-------------------------------------" << std::endl;
 }
 
+//! Specialized template for Vector3.
 template<>
 void printTree(simple::BinarySearchTree<Vector3> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
@@ -79,6 +93,7 @@ void printTree(simple::BinarySearchTree<Vector3> &tree) {
     std::cout << "-------------------------------------" << std::endl;
 }
 
+//! Specialized template for std::pair<int*, std::string>
 template<>
 void printTree(simple::BinarySearchTree<std::pair<int *, std::string>> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
@@ -112,6 +127,7 @@ int main() {
               << "*it: " << *it << ", and it++: " << *(it++)
               << ", and it after " << *it << ", it+2:" << *(it + 2)
               << std::endl;
+    // not exist
     // std::cout << *iBST.search(123) << std::endl;
     iBST.remove(20);
     iBST.remove(10);
@@ -146,6 +162,7 @@ int main() {
     std::cout << std::endl;
     auto it2 = sBST.begin();
     std::cout << *it2 << std::endl;
+    //testing incrementation of iterator
     std::cout << "++it2: " << *++it2 << ", ++it2: " << *++it2
               << ", it2+2: " << *(it2 + 2) << std::endl;
 
@@ -159,7 +176,9 @@ int main() {
 
     printTree(sBST);
     printTree(iBST);
-    //    auto copy = sBST;
+    //copy operator
+    auto copy = sBST;
+    //using move operator
     auto moved = std::move(iBST);
 
 
@@ -185,6 +204,7 @@ int main() {
     test.emplace(&b, "asdwaqeq");
     printTree(test);
 
+    //using initializer list constructor
     simple::BinarySearchTree<int> asd{12, 43, 65, 73, 10, 23, 6, -1};
     simple::BinarySearchTree<int> ewq = {65, 73, 123, 54, 10, 23, 6, -1};
 
@@ -214,6 +234,7 @@ int main() {
 
     printTree(bs);
 
+    //copy using copy constructor
     simple::BinarySearchTree<Vector3> round2(treeOfVec3);
 
     printTree(round2);
@@ -232,7 +253,7 @@ int main() {
 
     printTree(fromBin);
     simple::BinarySearchTree<int> iTree{12, 35, 20, 68};
-    simple::BinarySearchTree<char> cTres{'b', 's', 't'};
+    simple::BinarySearchTree<char> cTree{'b', 's', 't'};
 
     for (const auto &e: iTree) {
         std::cout << e << "\n";

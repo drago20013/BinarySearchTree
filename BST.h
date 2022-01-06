@@ -1,3 +1,13 @@
+/**
+ * @file BST.h
+ * @author Michal Smaluch (https://github.com/drago20013)
+ * @brief template header file for binary search tree data structure
+ * @version 1.2
+ * @date 2022-01-05
+ *
+ * @copyright GNU Public License v3.0
+ */
+
 #ifndef BST_H
 #define BST_H
 // BST class
@@ -8,10 +18,21 @@
 #include "LinkedList.h"
 
 namespace simple {
+    //! Binary search tree node struct.
+
+    //! Defines node of binary search tree with pointers to parent, left and right child.
     template<typename T>
     struct Node {
+        //! Default constructor.
         Node() = default;
 
+        //! Four argument constructor.
+
+        //! Accepts data by reference and pointers to parent, left/right children.
+        //! @param value Data to store in node.
+        //! @param ptrParent Pointer to parent node.
+        //! @param ptrLeft Pointer to left child.
+        //! @param ptrRight Pointer to right child.
         Node(const T &value, Node *ptrParent, Node *ptrLeft, Node *ptrRight) {
             m_data = new T(value);
             m_parent = ptrParent;
@@ -19,6 +40,13 @@ namespace simple {
             m_rightNode = ptrRight;
         }
 
+        //! Four argument constructor.
+
+        //! Accepts data by as right value reference, moves it and pointers to parent, left/right children.
+        //! @param value Data to store in node.
+        //! @param ptrParent Pointer to parent node.
+        //! @param ptrLeft Pointer to left child.
+        //! @param ptrRight Pointer to right child.
         Node(T &&value, Node *ptrParent, Node *ptrLeft, Node *ptrRight) {
             m_data = new T(std::move(value));
             m_parent = ptrParent;
@@ -26,19 +54,29 @@ namespace simple {
             m_rightNode = ptrRight;
         }
 
+        //! Destructor of node, deletes data.
         ~Node() { delete m_data; }
 
-        T *m_data;
-        Node *m_parent;
-        Node *m_leftNode;
-        Node *m_rightNode;
+        T *m_data;        //!< Pointer to stored data.
+        Node *m_parent;   //!< Pointer to parent node.
+        Node *m_leftNode; //!< Pointer to left child.
+        Node *m_rightNode;//!< Pointer to right child.
     };
 
+    //! Binary search tree forward iterator class.
+
+    //! Iterator for binary search tree, it uses some container as "stack" to keep history where it points.
+    //! It is in order iterator, from min to max.
     template<typename T>
     class BinarySearchTreeIterator {
     public:
+        //! Default constructor for forward iterator.
         BinarySearchTreeIterator() = default;
 
+        //! One argument constructor.
+
+        //! Accepts pointer to root node of a tree, then initialize a stack.
+        //! @param ptrRoot Pointer to a root of tree.
         explicit BinarySearchTreeIterator(Node<T> *ptrRoot) {
             Node<T> *curr = ptrRoot;
             while (curr) {
@@ -47,15 +85,21 @@ namespace simple {
             }
         }
 
+        //! Copy constructor for forward iterator.
         BinarySearchTreeIterator(const BinarySearchTreeIterator &other) {
             m_ptrsStack = other.m_ptrsStack;
         }
 
+        //! Move constructor for forward iterator.
         BinarySearchTreeIterator(BinarySearchTreeIterator &&other) noexcept {
             m_ptrsStack.clear();
             m_ptrsStack = std::move(other.m_ptrsStack);
         }
 
+        //! Move operator for forward iterator.
+
+        //! @param other Other iterator to copy from.
+        //! @return Iterator.
         BinarySearchTreeIterator &operator=(BinarySearchTreeIterator &&other) noexcept {
             if (this != &other) {
                 m_ptrsStack.clear();
@@ -64,6 +108,10 @@ namespace simple {
             return *this;
         }
 
+        //! Copy operator for forward iterator.
+
+        //! @param other Other iterator to move.
+        //! @return Iterator.
         BinarySearchTreeIterator &operator=(const BinarySearchTreeIterator &other) {
             if (this != &other) {
                 m_ptrsStack = other.m_ptrsStack;
@@ -71,6 +119,10 @@ namespace simple {
             return *this;
         }
 
+        //! Preincrementation operator.
+
+        //! Increment iterator to next place.
+        //! @return New iterator.
         BinarySearchTreeIterator &operator++() {
             Node<T> *curr = m_ptrsStack.back()->m_rightNode;
             m_ptrsStack.popBack();
@@ -81,12 +133,20 @@ namespace simple {
             return *this;
         }
 
+        //! Postincrementation operator.
+
+        //! Increment iterator to next place.
+        //! @return Old iterator.
         BinarySearchTreeIterator operator++(int) {
             const BinarySearchTreeIterator tmp(*this);
             ++(*this);
             return tmp;
         }
 
+        //! Incrementation operator.
+
+        //! Increment iterator n times.
+        //! @return New iterator.
         BinarySearchTreeIterator &operator+(size_t i) {
             while (i) {
                 (*this)++;
@@ -95,29 +155,53 @@ namespace simple {
             return *this;
         }
 
+        //! Dereference operator.
+
+        //! @return Value of T.
         const T &operator*() const { return *m_ptrsStack.back()->m_data; }
 
+        //! Pointer operator.
+
+        //! @return Pointer to T.
         const T *operator->() const { return m_ptrsStack.back()->m_data; }
 
+        //! Compare operator.
+
+        //! @param other Iterator to compare with.
+        //! @return True if iterators are the same, false otherwise.
         bool operator==(const BinarySearchTreeIterator &other) const {
             return m_ptrsStack.ptrBack() == other.m_ptrsStack.ptrBack();
         }
 
+        //! Difference operator.
+
+        //! @param other Iterator to compare with.
+        //! @return True if iterators are different, false otherwise.
         bool operator!=(const BinarySearchTreeIterator &other) const {
             return m_ptrsStack.ptrBack() != other.m_ptrsStack.ptrBack();
         }
 
     private:
         LinkedList<Node<T> *>
-                m_ptrsStack;//It was forward list written by me, after making
+                m_ptrsStack;//!< LinkedList used as stack, needed in iterator.
+        //It was forward list written by me, after making
         // it bidirectional, I used it as "stack"
     };
 
+    //! Binary search tree reverse iterator class.
+
+    //! Iterator for binary search tree, it uses some container as "stack" to keep history where it points.
+    //! It is in order iterator, from max to min.
     template<typename T>
     class BinarySearchTreeReverseIterator {
     public:
+        //! Default constructor for reverse iterator.
         BinarySearchTreeReverseIterator() = default;
 
+        //! One argument constructor.
+
+        //! Accepts pointer to root node of a tree, then initialize a stack.
+        //! @param ptrRoot Pointer to a root of tree.
         explicit BinarySearchTreeReverseIterator(Node<T> *ptrRoot) {
             Node<T> *curr = ptrRoot;
             while (curr) {
@@ -126,15 +210,21 @@ namespace simple {
             }
         }
 
+        //! Copy constructor for reverse iterator.
         BinarySearchTreeReverseIterator(const BinarySearchTreeReverseIterator &other) {
             m_ptrsStack = other.m_ptrsStack;
         }
 
+        //! Move constructor for reverse iterator.
         BinarySearchTreeReverseIterator(BinarySearchTreeReverseIterator &&other) noexcept {
             m_ptrsStack.clear();
             m_ptrsStack = std::move(other.m_ptrsStack);
         }
 
+        //! Move operator for reverse iterator.
+
+        //! @param other Other iterator to copy from.
+        //! @return Iterator.
         BinarySearchTreeReverseIterator &operator=(BinarySearchTreeReverseIterator &&other) noexcept {
             if (this != &other) {
                 m_ptrsStack.clear();
@@ -143,6 +233,10 @@ namespace simple {
             return *this;
         }
 
+        //! Copy operator for reverse iterator.
+
+        //! @param other Other iterator to move.
+        //! @return Iterator.
         BinarySearchTreeReverseIterator &operator=(const BinarySearchTreeReverseIterator &other) {
             if (this != &other) {
                 m_ptrsStack = other.m_ptrsStack;
@@ -150,6 +244,10 @@ namespace simple {
             return *this;
         }
 
+        //! Preincrementation operator.
+
+        //! Increment iterator to next place.
+        //! @return New iterator.
         BinarySearchTreeReverseIterator &operator++() {
             Node<T> *curr = m_ptrsStack.back()->m_leftNode;
             m_ptrsStack.popBack();
@@ -160,12 +258,20 @@ namespace simple {
             return *this;
         }
 
+        //! Postincrementation operator.
+
+        //! Increment iterator to next place.
+        //! @return Old iterator.
         BinarySearchTreeReverseIterator operator++(int) {
             const BinarySearchTreeReverseIterator tmp(*this);
             ++(*this);
             return tmp;
         }
 
+        //! Incrementation operator.
+
+        //! Increment iterator n times.
+        //! @return New iterator.
         BinarySearchTreeReverseIterator &operator+(size_t i) {
             while (i) {
                 (*this)++;
@@ -174,24 +280,42 @@ namespace simple {
             return *this;
         }
 
+        //! Dereference operator.
+
+        //! @return Value of T.
         const T &operator*() const { return *m_ptrsStack.back()->m_data; }
 
+        //! Pointer operator.
+
+        //! @return Pointer to T.
         const T *operator->() const { return m_ptrsStack.back()->m_data; }
 
+        //! Compare operator.
+
+        //! @param other Iterator to compare with.
+        //! @return True if iterators are the same, false otherwise.
         bool operator==(const BinarySearchTreeReverseIterator &other) const {
             return m_ptrsStack.ptrBack() == other.m_ptrsStack.ptrBack();
         }
 
+        //! Difference operator.
+
+        //! @param other Iterator to compare with.
+        //! @return True if iterators are different, false otherwise.
         bool operator!=(const BinarySearchTreeReverseIterator &other) const {
             return m_ptrsStack.ptrBack() != other.m_ptrsStack.ptrBack();
         }
 
     private:
         LinkedList<Node<T> *>
-                m_ptrsStack;//It was forward list written by me, after making
+                m_ptrsStack;//!< LinkedList used as stack, needed in iterator.
+        // It was forward list written by me, after making
         // it bidirectional, I used it as "stack"
     };
 
+    //! Binary search tree class.
+
+    //! Stores pointer to root and number of nodes.
     template<typename T>
     class BinarySearchTree {
     private:
@@ -202,8 +326,12 @@ namespace simple {
         typedef BinarySearchTreeReverseIterator<T> reverse_iterator;
 
     public:
+        //! Default constructor.
         BinarySearchTree() = default;
 
+        //! Copy constructor.
+
+        //! @param other Binary search tree to copy.
         BinarySearchTree(const BinarySearchTree &other) {
             simple::LinkedList<T> res;
             save(other.m_rootNode, res);
@@ -211,6 +339,9 @@ namespace simple {
                 insert(e);
         }
 
+        //! Move constructor.
+
+        //! @param other Binary search tree to move.
         BinarySearchTree(BinarySearchTree &&other) noexcept {
             m_rootNode = other.m_rootNode;
             m_numOfElements = other.m_numOfElements;
@@ -218,11 +349,17 @@ namespace simple {
             other.m_numOfElements = 0;
         }
 
+        //! Initializer list constructor.
+
+        //! @param init Initializer list.
         BinarySearchTree(std::initializer_list<T> init) {
             for (auto &e: init)
                 insert(e);
         }
 
+        //! Copy operator.
+
+        //! @param other Binary search tree to copy.
         BinarySearchTree &operator=(const BinarySearchTree &other) {
             if (this != &other && other.m_rootNode) {
                 LinkedList<T> res;
@@ -233,6 +370,9 @@ namespace simple {
             return *this;
         }
 
+        //! Move operator.
+
+        //! @param other Binary search tree to move.
         BinarySearchTree &operator=(BinarySearchTree &&other) noexcept {
             if (this != &other) {
                 m_rootNode = other.m_rootNode;
@@ -243,6 +383,10 @@ namespace simple {
             return *this;
         }
 
+        //! Serialize function.
+
+        //! Writes binary search tree in binary format to file.
+        //! @param fileName Name of file to save data to.
         void serialize(const std::string &fileName) {
             std::ofstream oFile(fileName, std::ios::out | std::ios::binary);
             if (oFile) {
@@ -256,6 +400,10 @@ namespace simple {
             }
         }
 
+        //! Deserialize function.
+
+        //! Reads binary data from file and fills binary search tree.
+        //! @param fileName Name of file to read from.
         void deserialize(const std::string &fileName) {
             std::ifstream iFile(fileName, std::ios::in | std::ios::binary);
             if (iFile) {
@@ -270,40 +418,78 @@ namespace simple {
             }
         }
 
+        //! Inserts data to binary search tree.
+
+        //! @param data Data.
+        //! @return Reference to data.
         const T &insert(const T &data) {
             return *(insert(&m_rootNode, m_rootNode, data)->m_data);
         }
 
+        //! Inserts data to binary search tree. (moves)
+
+        //! @param data Data.
+        //! @return Reference to data.
         const T &insert(T &&data) {
             return *(insert(&m_rootNode, m_rootNode, std::move(data))->m_data);
         }
 
+        //! Emplace data to binary search tree. (moves)
+
+        //! @param args argumets.
+        //! @return Reference to emplaced object.
         template<typename... Args>
         const T &emplace(Args &&...args) {
             return insert(T(std::forward<Args>(args)...));
         }
 
+        //! Removes data from binary search tree.
+
+        //! @param data data to remove.
         void remove(const T &data) { remove(search(m_rootNode, data)); }
 
+        //! Clears binary search tree.
         void clear() {
             clear(m_rootNode);
             m_numOfElements = 0;
             m_rootNode = nullptr;
         }
 
+        //! Search for data.
+
+        //! @param data Data to search for.
+        //! @return Pointer to found object.
         const T *search(const T &data) const {
             auto tmp = search(m_rootNode, data);
             return tmp ? tmp->m_data : nullptr;
         }
 
+        //! Returns reference to root object.
+
+        //! @return Reference to root object.
         const T &root() const { return *m_rootNode->m_data; }
 
+        //! Returns size of binary search tree.
+
+        //! @return Number of elements in binary search tree.
         [[nodiscard]] size_t size() const { return m_numOfElements; }
 
+        //! Retruns reference to minimum object in binary search tree.
+
+        //! @return Reference to minimum object in binary search tree.
         const T &min() const { return *(min(m_rootNode)->m_data); }
 
+        //! Retruns reference to maximum object in binary search tree.
+
+        //! @return Reference to maximum object in binary search tree.
         const T &max() const { return *(max(m_rootNode)->m_data); }
 
+        //! Output operator for file stream.
+
+        //! Saves binary search tree in text format in file.
+        //! @param os Output file stream.
+        //! @param source Binary search tree to save.
+        //! @return Output file stream.
         friend std::ofstream &operator<<(std::ofstream &os, const BinarySearchTree &source) {
             if (os.is_open() && source.m_rootNode) {
                 simple::LinkedList<T> res;
@@ -314,6 +500,12 @@ namespace simple {
             return os;
         }
 
+        //! Input operator for file stream.
+
+        //! Reads binary search tree in text format from file.
+        //! @param is Input file stream.
+        //! @param source Binary search tree to put data in.
+        //! @return Input file stream.
         friend std::ifstream &operator>>(std::ifstream &is, BinarySearchTree &source) {
             if (is.is_open()) {
                 T tmp;
@@ -323,25 +515,42 @@ namespace simple {
             return is;
         }
 
+        //! Output operator for adding data to binary search tree.
+
+        //! @param data Data to insert.
+        //! @return BinarySearchTree.
         BinarySearchTree &operator<<(const T &data) {
             insert(data);
             return *this;
         }
 
+        //! Destructor.
+
+        //! Calls clear() function which clears memory.
         ~BinarySearchTree() {
             clear();
         }
 
     public:
+        //! Iterator to min element.
         iterator begin() { return iterator(m_rootNode); }
 
+        //! Iterator to end. (nullptr)
         iterator end() { return iterator(nullptr); }
 
+        //! Reverse iterator to max element.
         reverse_iterator rbegin() { return reverse_iterator(m_rootNode); }
 
+        //! Reverse iterator to end. (nullptr)
         reverse_iterator rend() { return reverse_iterator(nullptr); }
 
     private:
+        //! Private save function.
+
+        //! Stores content of binary search tree in order in LinkedList for further use.
+        //! Uses recursion.
+        //! @param root Pointer to local root.
+        //! @param result LinkedList which result will be stored.
         void save(m_Node *root, LinkedList<T> &result) const {
             auto tmp = root;
             if (tmp) {
@@ -351,6 +560,10 @@ namespace simple {
             }
         }
 
+        //! Private remove function.
+
+        //! If node exist deletes it.
+        //! @param node Node to delete
         void remove(m_Node *node) {
             if (!node) return;
             // If no child is present
@@ -407,6 +620,11 @@ namespace simple {
             }
         }
 
+        //! Predecessor function.
+
+        //! Returns predecessor of given node.
+        //! @param root Local root node.
+        //! @return Pointer to predecessor.
         const m_Node *predecessor(m_Node *root) const {
             if (root->m_leftNode) return max(root->m_leftNode);
             auto tmpParent = root->m_parent;
@@ -416,6 +634,11 @@ namespace simple {
             return tmpParent;
         }
 
+        //! Successor function.
+
+        //! Returns successor of given node.
+        //! @param root Local root node.
+        //! @return Pointer to successor.
         const m_Node *successor(m_Node *root) const {
             if (root->m_rightNode) return min(root->m_rightNode);
             auto tmpParent = root->m_parent;
@@ -425,17 +648,24 @@ namespace simple {
             return tmpParent;
         }
 
+        //! Min function.
+
+        //! Returns min node.
+        //! @param root Local root.
+        //! @return Min node if exist, nullptr otherwise.
         const m_Node *min(m_Node *root) const {
-            if (root) {
-                auto tmp = root;
-                while (tmp->m_leftNode) {
-                    tmp = tmp->m_leftNode;
-                }
-                return tmp;
-            } else
-                return nullptr;
+            auto tmp = root;
+            while (tmp->m_leftNode) {
+                tmp = tmp->m_leftNode;
+            }
+            return tmp;
         }
 
+        //! Max function.
+
+        //! Returns max node.
+        //! @param root Local root.
+        //! @return Max node if exist, nullptr otherwise.
         const m_Node *max(m_Node *root) const {
             auto tmp = root;
             while (tmp->m_rightNode) {
@@ -444,6 +674,10 @@ namespace simple {
             return tmp;
         }
 
+        //! Clear function.
+
+        //! Clears memory from all object in binary search tree.
+        //! @param root Local root.
         void clear(m_Node *root) {
             if (root) {
                 clear(root->m_leftNode);
@@ -452,6 +686,13 @@ namespace simple {
             }
         }
 
+        //! Private insert function.
+
+        //! Creates new node with provided data, inserts it in correct place.
+        //! @param rootPtr Pointer to local root.
+        //! @param parentPtr Pointer to a parent node.
+        //! @param data Data to insert in node.
+        //! @return Pointer to inserted node.
         const m_Node *insert(m_Node **rootPtr, m_Node *parentPtr, const T &data) {
             auto root = *rootPtr;
             if (!root) {
@@ -472,6 +713,13 @@ namespace simple {
             }
         }
 
+        //! Private insert function.
+
+        //! Creates new node with provided data (moves it), inserts it in correct place.
+        //! @param rootPtr Pointer to local root.
+        //! @param parentPtr Pointer to a parent node.
+        //! @param data Data to insert in node.
+        //! @return Pointer to inserted node.
         const m_Node *insert(m_Node **rootPtr, m_Node *parentPtr, T &&data) {
             auto root = *rootPtr;
             if (!root) {
@@ -492,7 +740,13 @@ namespace simple {
             }
         }
 
-        m_Node *search(m_Node *root, const T &data) const {
+        //! Private search functon.
+
+        //! Searches for data in subtree starting from root.
+        //! @param root Local root.
+        //! @param data Data we are searching for.
+        //! @return Pointer to node with data if exist, nullptr otherwise.
+        const m_Node *search(m_Node *root, const T &data) const {
             if (!root) return nullptr;
 
             if (data == *root->m_data) return root;
@@ -504,8 +758,8 @@ namespace simple {
         }
 
     private:
-        size_t m_numOfElements{};
-        m_Node *m_rootNode{};
+        size_t m_numOfElements{};//!< Stores number of nodes in binary search tree.
+        m_Node *m_rootNode{};    //!< Pointer to a root node of a binary search tree.
     };
 
 }// namespace simple
