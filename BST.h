@@ -55,7 +55,12 @@ namespace simple {
         }
 
         //! Destructor of node, deletes data.
-        ~Node() { delete m_data; }
+        ~Node() {
+            delete m_data;
+            m_parent = nullptr;
+            m_leftNode = nullptr;
+            m_rightNode = nullptr;
+        }
 
         T *m_data;        //!< Pointer to stored data.
         Node *m_parent;   //!< Pointer to parent node.
@@ -65,7 +70,7 @@ namespace simple {
 
     //! Binary search tree forward iterator class.
 
-    //! Iterator for binary search tree, it uses some container as "stack" to keep history where it points.
+    //! Iterator for binary search tree, it uses some container as "stack" to keep history of where it points.
     //! It is in order iterator, from min to max.
     template<typename T>
     class BinarySearchTreeIterator {
@@ -327,7 +332,9 @@ namespace simple {
 
     public:
         //! Default constructor.
-        BinarySearchTree() = default;
+
+        //! @param compFunc Comparison function.
+        explicit BinarySearchTree(std::function<bool(const T &a, const T &b)> compFunc = [](const T &a, const T &b) { return a < b; }) : m_compFunc(compFunc){};
 
         //! Copy constructor.
 
@@ -337,6 +344,8 @@ namespace simple {
             save(other.m_rootNode, res);
             for (auto &e: res)
                 insert(e);
+
+            m_compFunc = other.m_compFunc;
         }
 
         //! Move constructor.
@@ -345,14 +354,18 @@ namespace simple {
         BinarySearchTree(BinarySearchTree &&other) noexcept {
             m_rootNode = other.m_rootNode;
             m_numOfElements = other.m_numOfElements;
-            other.m_rootNode = nullptr;
-            other.m_numOfElements = 0;
+            m_compFunc = std::move(other.m_compFunc);
+            other.m_rootNode = {};
+            other.m_numOfElements = {};
+            other.m_compFunc = {};
         }
 
         //! Initializer list constructor.
 
         //! @param init Initializer list.
-        BinarySearchTree(std::initializer_list<T> init) {
+        //! @param compFunc Comparison function.
+        BinarySearchTree(
+                std::initializer_list<T> init, std::function<bool(const T &a, const T &b)> compFunc = [](const T &a, const T &b) { return a < b; }) : m_compFunc(compFunc) {
             for (auto &e: init)
                 insert(e);
         }
@@ -367,6 +380,8 @@ namespace simple {
                 save(other.m_rootNode, res);
                 for (auto &e: res)
                     insert(e);
+
+                m_compFunc = other.m_compFunc;
             }
             return *this;
         }
@@ -379,8 +394,10 @@ namespace simple {
             if (this != &other) {
                 m_rootNode = other.m_rootNode;
                 m_numOfElements = other.m_numOfElements;
-                other.m_rootNode = nullptr;
-                other.m_numOfElements = 0;
+                m_compFunc = std::move(other.m_compFunc);
+                other.m_rootNode = {};
+                other.m_numOfElements = {};
+                other.m_compFunc = {};
             }
             return *this;
         }
@@ -392,11 +409,11 @@ namespace simple {
         void serialize(const std::string &fileName) {
             std::ofstream oFile(fileName, std::ios::out | std::ios::binary);
             if (oFile) {
-                oFile.write((char *) &m_numOfElements, sizeof(m_numOfElements));
+                oFile.write(reinterpret_cast<char *>(&m_numOfElements), sizeof(m_numOfElements));
                 LinkedList<T> res;
                 save(m_rootNode, res);
-                for (const auto &e: res) {
-                    oFile.write((char *) &e, sizeof(e));
+                for (auto &e: res) {
+                    oFile.write(reinterpret_cast<char *>(&e), sizeof(e));
                 }
                 oFile.close();
             }
@@ -411,9 +428,9 @@ namespace simple {
             if (iFile) {
                 size_t tmpSize;
                 T tmp;
-                iFile.read((char *) &tmpSize, sizeof(tmpSize));
+                iFile.read(reinterpret_cast<char *>(&tmpSize), sizeof(tmpSize));
                 for (size_t i = 0; i < tmpSize; ++i) {
-                    iFile.read((char *) &tmp, sizeof(tmp));
+                    iFile.read(reinterpret_cast<char *>(&tmp), sizeof(tmp));
                     insert(tmp);
                 }
                 iFile.close();
@@ -476,12 +493,12 @@ namespace simple {
         //! @return Number of elements in binary search tree.
         [[nodiscard]] size_t size() const { return m_numOfElements; }
 
-        //! Retruns reference to minimum object in binary search tree.
+        //! Returns reference to minimum object in binary search tree.
 
         //! @return Reference to minimum object in binary search tree.
         const T &min() const { return *(min(m_rootNode)->m_data); }
 
-        //! Retruns reference to maximum object in binary search tree.
+        //! Returns reference to maximum object in binary search tree.
 
         //! @return Reference to maximum object in binary search tree.
         const T &max() const { return *(max(m_rootNode)->m_data); }
@@ -546,7 +563,7 @@ namespace simple {
 
         //! Reverse iterator to max element.
 
-        //! @return rbegin() iterator.
+        //! @return rbegin iterator.
         reverse_iterator rbegin() { return reverse_iterator(m_rootNode); }
 
         //! Reverse iterator to end. (nullptr)
@@ -584,7 +601,12 @@ namespace simple {
                 else
                     tmpParent->m_rightNode = nullptr;
 
-                delete node;
+                if (node == m_rootNode) {
+                    delete node;
+                    m_rootNode = nullptr;
+                } else {
+                    delete node;
+                }
                 m_numOfElements--;
             }
             // If one child is present
@@ -598,7 +620,12 @@ namespace simple {
                     else
                         tmpParent->m_rightNode = tmpChild;
                 }
-                delete node;
+                if (node == m_rootNode) {
+                    delete node;
+                    m_rootNode = tmpChild;
+                } else {
+                    delete node;
+                }
                 m_numOfElements--;
             } else if (!node->m_rightNode) {
                 m_Node *tmpChild = node->m_leftNode;
@@ -610,7 +637,12 @@ namespace simple {
                     else
                         tmpParent->m_rightNode = tmpChild;
                 }
-                delete node;
+                if (node == m_rootNode) {
+                    delete node;
+                    m_rootNode = tmpChild;
+                } else {
+                    delete node;
+                }
                 m_numOfElements--;
             }
 
@@ -716,7 +748,7 @@ namespace simple {
                 return root;
             }
 
-            if (data < *root->m_data) {
+            if (m_compFunc(data, *root->m_data)) {
                 return insert(&(root->m_leftNode), root, data);
             } else {
                 return insert(&(root->m_rightNode), root, data);
@@ -743,7 +775,7 @@ namespace simple {
                 return root;
             }
 
-            if (data < *root->m_data) {
+            if (m_compFunc(data, *root->m_data)) {
                 return insert(&(root->m_leftNode), root, std::move(data));
             } else {
                 return insert(&(root->m_rightNode), root, std::move(data));
@@ -768,8 +800,9 @@ namespace simple {
         }
 
     private:
-        size_t m_numOfElements{};//!< Stores number of nodes in binary search tree.
-        m_Node *m_rootNode{};    //!< Pointer to a root node of a binary search tree.
+        size_t m_numOfElements{};                            //!< Stores number of nodes in binary search tree.
+        m_Node *m_rootNode{};                                //!< Pointer to a root node of a binary search tree.
+        std::function<bool(const T &, const T &)> m_compFunc;//!< Comparison criteria functor
     };
 
 }// namespace simple
