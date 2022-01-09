@@ -8,9 +8,13 @@
  * @copyright GNU Public License v3.0
  */
 
+#include <functional>
+#include <iomanip>
 #include <iostream>
 
 #include "BST.h"
+
+typedef std::pair<int *, std::string> myPair;
 
 //! Helper struct used for testing
 struct Vector3 {
@@ -63,8 +67,14 @@ struct Vector3 {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Vector3 &vec) {
-        os << "x: " << vec.x << ", y: " << vec.y << ", z: " << vec.z;
+        os << std::left << "x: " << std::setw(5) << vec.x << "\ty: " << std::setw(5) << vec.y << "\tz: " << std::setw(5) << vec.z;
         return os;
+    }
+
+    friend std::istream &operator>>(std::istream &is, Vector3 &vec) {
+        std::string tmp;
+        is >> tmp >> vec.x >> tmp >> vec.y >> tmp >> vec.z;
+        return is;
     }
 
     bool operator<(const Vector3 &other) const { return x < other.x; }
@@ -72,13 +82,24 @@ struct Vector3 {
     bool operator==(const Vector3 &other) const { return x == other.x; }
 };
 
-//! Template function used for prining tree.
+//! Template function used for printing tree.
 //! It uses forward iterator and print data in order.
 template<typename T>
 void printTree(simple::BinarySearchTree<T> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
     for (auto &e: tree)
         std::cout << e << " ";
+
+    std::cout << "\n-------------------------------------" << std::endl;
+}
+
+//! Template function used for printing tree.
+//! It uses reverse iterator and print data in reverse order.
+template<typename T>
+void reversePrint(simple::BinarySearchTree<T> &tree) {
+    std::cout << "number of elements: " << tree.size() << "\n";
+    for (auto rIt = tree.rbegin(); rIt != tree.rend(); rIt++)
+        std::cout << *rIt << " ";
 
     std::cout << "\n-------------------------------------" << std::endl;
 }
@@ -93,169 +114,158 @@ void printTree(simple::BinarySearchTree<Vector3> &tree) {
     std::cout << "-------------------------------------" << std::endl;
 }
 
-//! Specialized template for std::pair<int*, std::string>
+//! Specialized template for Vector3.
+//! It uses reverse iterator and print data in reverse order.
 template<>
-void printTree(simple::BinarySearchTree<std::pair<int *, std::string>> &tree) {
+void reversePrint(simple::BinarySearchTree<Vector3> &tree) {
     std::cout << "number of elements: " << tree.size() << "\n";
-    for (auto &[x, y]: tree)
-        std::cout << *x << ", " << y << " \n";
+    for (auto rIt = tree.rbegin(); rIt != tree.rend(); rIt++)
+        std::cout << *rIt << "\n";
 
     std::cout << "-------------------------------------" << std::endl;
 }
 
-int main() {
-    simple::BinarySearchTree<int> iBST;
+//! Specialized template for std::pair<int*, std::string>
+template<>
+void printTree(simple::BinarySearchTree<myPair> &tree) {
+    std::cout << "number of elements: " << tree.size() << "\n";
+    for (auto &[x, y]: tree)
+        std::cout << *x << " " << y << " \n";
 
-    iBST.insert(10);
-    iBST.insert(7);
-    iBST.insert(15);
-    iBST.insert(17);
-    iBST.insert(5);
-    iBST.insert(226);
-    iBST.insert(12);
-    iBST.insert(20);
-    iBST.insert(13);
-    auto it = iBST.begin();
-    simple::BinarySearchTreeIterator<int> it7;
+    std::cout << "-------------------------------------" << std::endl;
+}
 
-    std::cout << *it << " " << *++it << " " << *++it << std::endl;
+//! Specialized template for std::pair<int*, std::string>
+//! It uses reverse iterator and print data in reverse order.
+template<>
+void reversePrint(simple::BinarySearchTree<myPair> &tree) {
+    std::cout << "number of elements: " << tree.size() << "\n";
+    for (auto rIt = tree.rbegin(); rIt != tree.rend(); rIt++)
+        std::cout << *rIt->first << " " << rIt->second << " \n";
 
-    std::cout << iBST.root() << std::endl;
-    std::cout << *iBST.search(7) << std::endl;
-    printTree(iBST);
-    std::cout << *it << " next -> " << *(++it) << ", next using it++ "
-              << "*it: " << *it << ", and it++: " << *(it++)
-              << ", and it after " << *it << ", it+2:" << *(it + 2)
-              << std::endl;
-    // not exist
-    // std::cout << *iBST.search(123) << std::endl;
-    iBST.remove(20);
-    iBST.remove(10);
-    iBST.remove(123);
-    printTree(iBST);
-    iBST.search(123);
-    std::cout << std::endl;
-    std::cout << iBST.root() << std::endl;
+    std::cout << "-------------------------------------" << std::endl;
+}
 
-    iBST.remove(5);
-    printTree(iBST);
-    std::cout << std::endl;
-    iBST.remove(226);
-    printTree(iBST);
-    std::cout << std::endl;
-    iBST.remove(17);
-    printTree(iBST);
+std::ostream &operator<<(std::ostream &os, const myPair &src) {
+    os << *src.first << " " << src.second;
+    return os;
+}
 
-    simple::BinarySearchTree<std::string> sBST;
+std::istream &operator>>(std::istream &is, myPair &src) {
+    is >> *src.first >> src.second;
+    return is;
+}
 
-    sBST.insert("root");
-    sBST.insert("sdf");
-    sBST.insert("awer");
-    sBST.insert("asdxcv");
-    sBST.insert("ergv");
+//! Helper function, creates 3 trees of T type and test them.
+template<typename T>
+void testTree(
+        std::initializer_list<T> init,
+        int nrOfTest = 0,
+        const T &searchFor = {},
+        const T &toRemove_1 = {},
+        const T &toRemove_2 = {},
+        const T &toRemove_3 = {},
+        std::function<bool(const T &a, const T &b)> compFunc = [](const T &a, const T &b) { return a < b; }) {
 
-    std::cout << sBST.root() << std::endl;
-    std::cout << *sBST.search("sdf") << std::endl;
-    std::cout << sBST.min() << " " << iBST.min() << " " << iBST.max()
-              << std::endl;
-    printTree(sBST);
-    std::cout << std::endl;
-    auto it2 = sBST.begin();
-    std::cout << *it2 << std::endl;
-    //testing incrementation of iterator
-    std::cout << "++it2: " << *++it2 << ", ++it2: " << *++it2
-              << ", it2+2: " << *(it2 + 2) << std::endl;
+    simple::BinarySearchTree<T> testTree1(compFunc);
+    simple::BinarySearchTree<T> testTree2(compFunc);
+    simple::BinarySearchTree<T> testTree3(init, compFunc);
 
-    simple::BinarySearchTree<Vector3> treeOfVec3;
-    Vector3 yes(1);
-    yes.ar[0] = 1;
-    treeOfVec3.insert(yes);
-    treeOfVec3.insert({2.4f, 1.6f, 0.9f});
-    treeOfVec3.insert(Vector3(1.6f));
-    printTree(treeOfVec3);
+    //emplace
+    for (auto &e: init) testTree2.emplace(e);
 
-    printTree(sBST);
-    printTree(iBST);
     //copy operator
-    auto copy = sBST;
-    //using move operator
-    auto moved = std::move(iBST);
+    testTree1 = testTree2;
 
+    std::cout << "root of testTree1: " << testTree1.root() << std::endl;
+    if (testTree1.search(searchFor)) std::cout << "Found " << searchFor << " in testTree1" << std::endl;
 
-    printTree(treeOfVec3);
+    //removing from testTrees2
+    testTree2.remove(toRemove_1);
+    testTree2.remove(toRemove_2);
+    testTree2.remove(toRemove_3);
 
-    printTree(moved);
+    //printing trees
+    std::cout << "testTree1\t";
+    printTree(testTree1);
+    std::cout << "testTree2\t";
+    printTree(testTree2);
+    std::cout << "testTree3\t";
+    printTree(testTree3);
 
-    moved.clear();
-    moved.insert(85);
-    moved.insert(45);
-    moved.insert(195);
+    //printing testTree using reverse iterator
+    std::cout << "reversed testTree1\t";
+    reversePrint(testTree1);
+    std::cout << "reversed testTree2\t";
+    reversePrint(testTree2);
+    std::cout << "reversed testTree3\t";
+    reversePrint(testTree3);
 
-    printTree(moved);
+    //saving testTree3 to a text file, clearing it and then reading from text file
+    if (nrOfTest != 0) {
+        std::string sFileName{"out" + std::to_string(nrOfTest) + ".txt"};
+        std::ofstream oFile(sFileName);
+        oFile << testTree3;
+        oFile.close();
 
-    sBST.clear();
-    printTree(sBST);
-    sBST.insert("Very nice");
-    printTree(sBST);
+        testTree3.clear();
 
-    simple::BinarySearchTree<std::pair<int *, std::string>> test;
-    int a{3}, b{7};
-    test.insert(std::pair(&a, "sedsf"));
-    test.emplace(&b, "asdwaqeq");
-    printTree(test);
+        std::ifstream inFile(sFileName);
+        inFile >> testTree3;
+        inFile.close();
 
-    //using initializer list constructor
-    simple::BinarySearchTree<int> asd{12, 43, 65, 73, 10, 23, 6, -1};
-    simple::BinarySearchTree<int> ewq = {65, 73, 123, 54, 10, 23, 6, -1};
+        std::cout << "testTree3 after saving, clearing and reading from file: " << std::endl;
+        printTree(testTree3);
+    }
+}
 
-    simple::BinarySearchTree<std::pair<int *, std::string>> test2{{&b, "nbmjkh"},
-                                                                  {&a, "zxcvnbydf"}};
-    printTree(test2);
-    printTree(asd);
-    printTree(ewq);
+int main() {
+    int nrOfTest{1};
+    // Testing BST with ints
+    testTree<int>({4, 5, 7, 3, 1, 50, 7, 5, 9, 10, 17, 226, 20}, nrOfTest++,
+                  226, 7, 5, 9,
+                  [](const int &a, const int &b) { return a > b; });
 
-    std::ofstream oFile("out.txt");
-    oFile << ewq;
-    oFile.close();
+    // Testing BST with doubles
+    testTree({4.32, 5.54, 7.76, 3.876, 1.234, 50.23478, 7.897, 5.2345, 9.789, 10.234, 17.23451, 226.123, 20.876}, nrOfTest++);
 
+    // Testing BST with Vector3s
+    testTree<Vector3>({Vector3(),
+                       Vector3(3),
+                       Vector3(45.2f, 32.1f, 87.9f)},
+                      nrOfTest++,
+                      Vector3(45.2f, 32.1f, 87.9f),
+                      Vector3(),
+                      Vector3(45.2f, 32.1f, 87.9f),
+                      Vector3(),
+                      [](const Vector3 &a, const Vector3 &b) { return a.y > b.y; });
+
+    // Testing BST with std::strings
+    testTree<std::string>({"abc", "def", "ghi"}, 0, "def", "ghi", "abc");
+
+    //Testing BST with std::pair<int *, std::string>
+    int a{10}, b{69}, c{420};
+
+    testTree<myPair>({myPair(&a, "another"), myPair(&b, "one"), myPair(&c, "bite the dust")}, 0,
+                     myPair(&a, "another"),
+                     myPair(&c, "bite the dust"));
+
+    // reading data in text format from file
+    simple::BinarySearchTree<int> iTree;
     std::ifstream inFile("in.txt");
-    simple::BinarySearchTree<int> final;
-    inFile >> final;
-    inFile.close();
-    printTree(final);
-
-    auto bs = sBST;
-
-    printTree(bs);
-
-    bs << "sdf"
-       << "12wzxc"
-       << "dfg4";
-
-    printTree(bs);
-
-    //copy using copy constructor
-    simple::BinarySearchTree<Vector3> round2(treeOfVec3);
-
-    printTree(round2);
-
-    //reverse iterator
-    auto rit = final.rbegin();
-    for (; rit != final.rend(); rit++) {
-        std::cout << *rit << " ";
+    if (inFile) {
+        inFile >> iTree;
+        inFile.close();
     }
-    std::cout << std::endl;
 
-    moved.serialize("data.dat");
+    // Reading data in text format from file, saving it in binary and then reading in binary
+    iTree.serialize("data.bin");
 
-    simple::BinarySearchTree<int> fromBin;
-    fromBin.deserialize("data.dat");
+    //changing comparison criteria
+    simple::BinarySearchTree<int> iTree2([](const int &a, const int &b) { return a > b; });
 
-    printTree(fromBin);
-    simple::BinarySearchTree<int> iTree{12, 35, 20, 68};
-    simple::BinarySearchTree<char> cTree{'b', 's', 't'};
-
-    for (const auto &e: iTree) {
-        std::cout << e << "\n";
-    }
+    iTree2.deserialize("data.bin");
+    printTree(iTree);
+    printTree(iTree2);
+    std::cout << "root of iTree: " << iTree.root() << ", root of iTree2: " << iTree2.root() << std::endl;
 }
