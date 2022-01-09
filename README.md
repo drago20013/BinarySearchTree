@@ -6,9 +6,9 @@
 ![Windows](https://img.shields.io/badge/os-windows-brightgreen)
 
 ### API
-* Default constructor
+* Default constructor (can specify comparison criteria when constructing)
 * Copy/Move constructors
-* Initializer list constructor
+* Initializer list constructor (can specify comparison criteria when constructing)
 * Copy/Move operators
 * Serialize/Deserialize function (only for types without pointers)
 * Insert
