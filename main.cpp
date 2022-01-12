@@ -264,6 +264,8 @@ int main() {
     //changing comparison criteria
     simple::BinarySearchTree<int> iTree2([](const int &a, const int &b) { return a > b; });
 
+    simple::BinarySearchTree<Vector3> asd;
+
     iTree2.deserialize("data.bin");
     printTree(iTree);
     printTree(iTree2);
