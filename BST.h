@@ -404,20 +404,19 @@ namespace simple {
             return *this;
         }
 
-
         //! Serialize function.
 
         //! Writes binary search tree in binary format to file.
         //! @param fileName Name of file to save data to.
         void serialize(const std::string &fileName) {
             std::ofstream oFile(fileName, std::ios::out | std::ios::binary);
-            if (oFile) {
-                std::stringstream ss;
+            if (oFile && m_numOfElements) {
                 std::string data;
                 oFile.write(reinterpret_cast<char *>(&m_numOfElements), sizeof(m_numOfElements));
                 LinkedList<T> res;
                 save(m_rootNode, res);
                 for (auto &e: res) {
+                    std::stringstream ss;
                     ss << e;
                     data = ss.str();
                     size_t strSize = data.size();
@@ -443,7 +442,7 @@ namespace simple {
                     size_t strSize;
                     std::string data;
                     iFile.read(reinterpret_cast<char *>(&strSize), sizeof(strSize));
-                    iFile.read(reinterpret_cast<char *>(&data), sizeof(char) * strSize);
+                    for(size_t j=0; j< strSize; ++j) data += iFile.get();
                     ss << data;
                     ss >> tmp;
                     insert(tmp);
