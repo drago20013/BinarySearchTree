@@ -10,7 +10,7 @@
 * Copy/Move constructors
 * Initializer list constructor (can specify comparison criteria when constructing)
 * Copy/Move operators
-* Serialize/Deserialize function (only for types without pointers)
+* Serialize/Deserialize function
 * Insert
 * Emplace
 * Remove
