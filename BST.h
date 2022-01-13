@@ -14,6 +14,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <functional>
 
 #include "LinkedList.h"
 
