@@ -1,5 +1,6 @@
 html/
 latex/
+.cache/
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles

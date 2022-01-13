@@ -13,8 +13,9 @@
 // BST class
 
 #include <fstream>
-#include <iostream>
 #include <functional>
+#include <iostream>
+#include <sstream>
 
 #include "LinkedList.h"
 
@@ -403,6 +404,7 @@ namespace simple {
             return *this;
         }
 
+
         //! Serialize function.
 
         //! Writes binary search tree in binary format to file.
@@ -410,11 +412,17 @@ namespace simple {
         void serialize(const std::string &fileName) {
             std::ofstream oFile(fileName, std::ios::out | std::ios::binary);
             if (oFile) {
+                std::stringstream ss;
+                std::string data;
                 oFile.write(reinterpret_cast<char *>(&m_numOfElements), sizeof(m_numOfElements));
                 LinkedList<T> res;
                 save(m_rootNode, res);
                 for (auto &e: res) {
-                    oFile.write(reinterpret_cast<char *>(&e), sizeof(e));
+                    ss << e;
+                    data = ss.str();
+                    size_t strSize = data.size();
+                    oFile.write(reinterpret_cast<char *>(&strSize), sizeof(strSize));
+                    oFile.write(reinterpret_cast<char *>(data.data()), sizeof(char) * strSize);
                 }
                 oFile.close();
             }
@@ -427,11 +435,17 @@ namespace simple {
         void deserialize(const std::string &fileName) {
             std::ifstream iFile(fileName, std::ios::in | std::ios::binary);
             if (iFile) {
-                size_t tmpSize;
-                T tmp;
-                iFile.read(reinterpret_cast<char *>(&tmpSize), sizeof(tmpSize));
-                for (size_t i = 0; i < tmpSize; ++i) {
-                    iFile.read(reinterpret_cast<char *>(&tmp), sizeof(tmp));
+                size_t tmpNumOfElements;
+                iFile.read(reinterpret_cast<char *>(&tmpNumOfElements), sizeof(tmpNumOfElements));
+                for (size_t i = 0; i < tmpNumOfElements; ++i) {
+                    std::stringstream ss;
+                    T tmp;
+                    size_t strSize;
+                    std::string data;
+                    iFile.read(reinterpret_cast<char *>(&strSize), sizeof(strSize));
+                    iFile.read(reinterpret_cast<char *>(&data), sizeof(char) * strSize);
+                    ss << data;
+                    ss >> tmp;
                     insert(tmp);
                 }
                 iFile.close();
