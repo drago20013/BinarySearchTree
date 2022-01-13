@@ -270,4 +270,19 @@ int main() {
     printTree(iTree);
     printTree(iTree2);
     std::cout << "root of iTree: " << iTree.root() << ", root of iTree2: " << iTree2.root() << std::endl;
+
+    // Testing serialization of more complicated types
+    simple::BinarySearchTree<Vector3> vec3Tree{Vector3(), Vector3(1.5f), Vector3(2.54f, 8.69f, 420.1f)};
+    vec3Tree.serialize("vec3Tree.bin");
+    simple::BinarySearchTree<Vector3> vec3;
+    vec3.deserialize("vec3Tree.bin");
+
+    printTree(vec3);
+
+    simple::BinarySearchTree<std::string> stringTree{"Test", "Of", "New", "Serialization", "Function"};
+    stringTree.serialize("stringTree.bin");
+    simple::BinarySearchTree<std::string> strTree;
+    strTree.deserialize("stringTree.bin");
+
+    printTree(strTree);
 }
